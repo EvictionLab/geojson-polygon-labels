@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const argv = require('yargs')
-    .usage("$0 [--precision=0.001] [--include-area] [--label=polylabel] [--style=explode] [--include-minzoom=0-16] [--verbose] <layer.geojson> > <labels.geojson>")
+    .usage("$0 [--precision=0.001] [--include-area] [--label=polylabel] [--style=explode] [--include-minzoom] [--minzoom=0] [--maxzoom=16] [--verbose] <layer.geojson> > <labels.geojson>")
     .option('verbose', {
         alias: 'v',
         boolean: true,
@@ -24,8 +24,19 @@ const argv = require('yargs')
     })
     .option('include-minzoom', {
         alias: 'm',
+        boolean: true,
         describe: 'Adds a the tippecanoe minzoom property',
-        default: '0-16'
+        default: false
+    })
+    .option('minzoom', {
+        alias: 'min',
+        describe: 'Minimum zoom for tippecanoe minzoom calculation',
+        default: 0
+    })
+    .option('maxzoom', {
+        alias: 'max',
+        describe: 'Maximum zoom for tippecanoe minzoom calculation',
+        default: 16
     })
     .option('label', {
         alias: 'l',
@@ -66,6 +77,8 @@ const precision = argv.precision || 0.001;
 const includeArea = argv['include-area'];
 const style = argv['style'];
 const includeMinzoom = argv['include-minzoom'];
+const minZoomMin = argv['minzoom'];
+const minZoomMax = argv['maxzoom'];
 
 if (verbose) console.error('Reading and parsing JSON...');
 const featureStream = streamFeaturesFromFile(argv._[0]);
@@ -134,9 +147,6 @@ featureStream.on('data', (inputFeature) => {
                             labelProperties
                         );
                     }
-
-                    var minZoomMin = Number(includeMinzoom.split('-')[0]);
-                    var minZoomMax = Number(includeMinzoom.split('-')[1]);
 
                     if (includeMinzoom) {
                         tippecanoeProperties = {
